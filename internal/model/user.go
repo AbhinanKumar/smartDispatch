@@ -9,4 +9,6 @@ type User struct{
 	PasswordHash string `gorm:"not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+
+	// gorm.Model            gorm.Model automatically adds: ID, CreatedAt, UpdatedAt, DeletedAt
 }

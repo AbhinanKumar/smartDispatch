@@ -115,3 +115,39 @@ Receive JSON -> Bind DTO -> Call Service -> Return HTTP Response
 # Service
 Validate Name -> Normalize Email -> Validate Password -> Find Existing User -> Hash Password -> Create User Model -> Repository.Create() -> Return Response DTO
 
+# Login is a core business operation. So want it readable
+
+FindByEmail(email string)
+FindByPhone(phone string)
+FindByUsername(username string)
+FindByEmployeeID(id string)
+
+This is actually very readable.
+
+| Specific Methods | Generic Method              |
+| ---------------- | --------------------------- |
+| Easy to read     | Flexible                    |
+| Type-safe        | More reusable               |
+| Self-documenting | Handles many search cases   |
+| More methods     | More complex implementation |
+
+It depends on the domain.
+
+# Admin Search API
+where users can search by: email, phone, city, department, status,,technician id, role
+Then we introduce something like: SearchUsers(filter UserFilter)
+where: type UserFilter struct {
+    Email  *string
+    Phone  *string
+    Status *string
+    Role   *string
+}
+This gives flexibility where it's needed, without making the authentication code harder to understand.
+
+HTTP Request -> RegisterRequest DTO -> Handler -> Service -> User Model -> Repository -< Database -> Repository -> Service -> RegisterResponse DTO -> Handler -> JSON
+
+Handler speaks: dto.RegisterRequest
+Repository speaks: model.User
+They never talk directly.
+
+
