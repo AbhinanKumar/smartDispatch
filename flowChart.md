@@ -1,0 +1,117 @@
+# Registration Algorithm
+Receive request -> Validate request -> Trim email -> Convert email to lowercase -> Validate password -> Check if email exists => Hash password -> Create User model -> Save User -> Return Response
+
+# Dependency Injection
+Instead of: service := AuthService{}
+
+inside the handler, we do:  handler := NewAuthHandler(service)
+Why? Because tomorrow we can inject:
+Mock service (for testing), Real service, Cached service -> without changing the handler.
+
+# Login Flow
+Receive request -> Normalize email -> Find user -> Compare password using bcrypt -> Generate JWT -> Return token
+
+# JWT
+User -> JWT Token -> Client stores token -> Future requests -> Authorization Header -> Middleware validates token
+
+# Business rules
+Name required, Email unique, Password ≥ 8 characters
+
+# Failure Analysis
+"What can go wrong?"
+Email empty -> Validation error
+Email already exists -> 409 Conflict
+Database unavailable ->  Internal Server Error
+Two users register simultaneously -> UNIQUE constraint protects us
+
+# Registration
+HTTP JSON -> RegisterRequest DTO -> AuthService -> User Model -> Repository -> Database
+
+# Response
+Database Model -> RegisterResponse DTO -> JSON
+
+# Appointment Booking
+Business: Reserve a slot. -> Failure Analysis: Double booking. -> Data Flow: AppointmentRequest DTO -> Appointment Model -> Repository -> DB -> AppointmentResponse DTO -> JSON -> DSA: Interval overlap.
+
+# What data enters the system?
+Example:{"email":"abhi@gmail.com", "password":"Secret123"}
+
+# What should the system trust?
+Answer: Almost nothing from the client. Validate everything.
+
+# What should the database guarantee?
+Examples: Unique email, Foreign keys, Not null, Transactions
+
+# What data leaves the system?
+Never return: Password, Password hash, Internal IDs that shouldn't be public, Sensitive metadata
+
+# What happens if something fails?
+Invalid JSON, Duplicate email, Slow database. Lost connection, Transaction rollback
+
+# Register API
+# Business:
+| Rule              | Layer                 |
+| ----------------- | --------------------- |
+| Name required     | Service               |
+| Email required    | Service               |
+| Password required | Service               |
+| Password >= 8     | Service               |
+| Email normalized  | Service               |
+| Email unique      | Database + Repository |
+| Password hashed   | Service               |
+
+# Goes wormg
+| Problem                           | Solution                   |
+| --------------------------------- | -------------------------- |
+| Invalid JSON                      | Handler returns 400        |
+| Empty name                        | Service validation         |
+| Empty email                       | Service validation         |
+| Weak password                     | Service validation         |
+| Duplicate email                   | UNIQUE constraint          |
+| DB down                           | Repository returns error   |
+| Hashing fails                     | Service returns error      |
+| Two users register simultaneously | Database UNIQUE constraint |
+
+# Data Flow
+Client sends: { "name":"Abhinandan", "email":"Abhi@gmail.com ", "password":"Secret123" }
+ -> Handler -> dto.RegisterRequest
+
+Why a DTO? -> Because this is HTTP data. Not database data.
+
+Service receives -> dto.RegisterRequest
+Service cleans it.  request.Email = strings.ToLower(strings.TrimSpace(request.Email))
+Now, Abhi@gmail.com -> abhi@gmail.com
+
+Service creates a Model.    
+model.User{
+    Name: request.Name,
+    Email: request.Email,
+    PasswordHash: hashedPassword,
+}
+The DTO had: Password  |   The Model has: PasswordHash
+This is why DTO ≠ Model.
+
+Repository receives *model.User
+Repository only knows: "I save Users."
+
+Database stores -> ID, Name, Email, PasswordHash, CreatedAt, Response, Database Model
+
+Service -> DTO -> RegisterResponse -> JSON {"id":1,"name":"Abhinandan","email":"abhi@gmail.com"}
+
+# Dependency Injection
+Instead of handler := AuthHandler{}
+We have   main -> database -> repository -> service -> handler -> router
+
+In code:
+repo := repository.NewGormUserRepository(db)
+service := service.NewAuthService(repo)
+handler := handler.NewAuthHandler(service)
+
+Everything depends on abstractions. Nothing creates its own dependencies.
+
+# Handler
+Receive JSON -> Bind DTO -> Call Service -> Return HTTP Response
+
+# Service
+Validate Name -> Normalize Email -> Validate Password -> Find Existing User -> Hash Password -> Create User Model -> Repository.Create() -> Return Response DTO
+
