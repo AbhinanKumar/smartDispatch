@@ -6,6 +6,8 @@ import(
 	"golang.org/x/crypto/bcrypt"
 	"github.com/AbhinanKumar/smart-dispatch/internal/dto"
 	"github.com/AbhinanKumar/smart-dispatch/internal/model"
+	appErrors "github.com/AbhinanKumar/smart-dispatch/internal/errors"
+	"github.com/AbhinanKumar/smart-dispatch/internal/config"
 )
 
 type authService struct{
@@ -24,9 +26,11 @@ func NewAuthService(userRepo repository.UserRepository) AuthService{
 	Why? -> Because the service depends on an abstraction, not a concrete implementation.
 	Tomorrow we can inject: Mock repository, Mongo repository, PostgreSQL repository without changing the service.
 */
-var (
-	ErrEmailAlreadyExists = errors.New("email already exists")
-)
+
+// var (
+// 	ErrEmailAlreadyExists = errors.New("email already exists")
+// 	ErrInvalidCredentials = errors.New("invalid email or password")
+// )
 
 func (s *authService) Register(req dto.RegisterRequest) (*dto.RegisterResponse, error){
 	
@@ -41,7 +45,7 @@ func (s *authService) Register(req dto.RegisterRequest) (*dto.RegisterResponse, 
 		return nil, err
 	}
 	if existingUser != nil{
-		return nil, ErrEmailAlreadyExists
+		return nil, appErrors.ErrEmailAlreadyExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -75,4 +79,30 @@ func validateRegisterRequest(req dto.RegisterRequest) error{
 		return errors.New("password must be at least 8 character")
 	}
 	return nil
+}
+
+func (s *authService) Login(req dto.LoginRequest) (*dto.LoginResponse, error){
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	user, err := s.userRepo.FindByemail(email); 
+	if err != nil{
+		return nil, err
+	}
+	if user == nil{
+		return nil, appErrors.ErrInvalidCredentials
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+	if err != nil{
+		return nil, appErrors.ErrInvalidCredentials
+	}
+
+	token, err := config.GenerateJWT(user.ID, user.Email)
+	if err != nil{
+		return nil, err
+	}
+
+	return &dto.LoginResponse{
+		Token: token,
+	}, nil
 }
