@@ -4,17 +4,26 @@ import(
 	"github.com/AbhinanKumar/smart-dispatch/internal/config"
 	"github.com/AbhinanKumar/smart-dispatch/internal/router"
 	"github.com/joho/godotenv"
+	"github.com/AbhinanKumar/smart-dispatch/internal/repository"
+	"github.com/AbhinanKumar/smart-dispatch/internal/service"
+	"github.com/AbhinanKumar/smart-dispatch/internal/handler"
 )
 func main(){
 	if err := godotenv.Load(); err != nil {
 		log.Println(".env file not found, using system environment variables")
 	}
-	_, err := config.NewDatabase()
+	db, err := config.NewDatabase()
 	if err != nil{
 		log.Fatal(err)
 	}
 
-	r := router.SetupRouter()
+	userRepo :=  repository.NewUserRepository(db)
+
+	authService := service.NewAuthService(userRepo)
+
+	authHandler := handler.NewAuthHandler(authService)
+
+	r := router.SetupRouter(authHandler)
 	log.Println("Server running on :8000")
 	r.Run(":8000")
 }

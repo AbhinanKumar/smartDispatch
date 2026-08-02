@@ -1,11 +1,11 @@
 package service
 import(
-	"github.com/AbhinanKumar/smartDispatch/internal/repository"
+	"github.com/AbhinanKumar/smart-dispatch/internal/repository"
 	"strings"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/AbhinanKumar/smartDispatch/internal/dto"
-	"github.com/AbhinanKumar/smartDispatch/internal/model"
+	"github.com/AbhinanKumar/smart-dispatch/internal/dto"
+	"github.com/AbhinanKumar/smart-dispatch/internal/model"
 )
 
 type authService struct{
@@ -34,9 +34,9 @@ func (s *authService) Register(req dto.RegisterRequest) (*dto.RegisterResponse, 
 		return nil,err
 	}
 
-	email := strings.ToLower(strings.TrimSapce(req.Eamil))
+	email := strings.ToLower(strings.TrimSpace(req.Email))
 
-	existingUser, err := s.userRepo.FindByEmail(email)
+	existingUser, err := s.userRepo.FindByemail(email)
 	if err != nil{
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (s *authService) Register(req dto.RegisterRequest) (*dto.RegisterResponse, 
 		return nil, err
 	}
 	user := model.User{
-		Name: strings.TrimSapce(req.Name),
+		Name: strings.TrimSpace(req.Name),
 		Email: email,
 		PasswordHash: string(hash),
 	}
@@ -68,11 +68,11 @@ func validateRegisterRequest(req dto.RegisterRequest) error{
 	if strings.TrimSpace(req.Name) == ""{
 		return errors.New("name is required")
 	}
-	if strings.TrimSapce(req.Eamil) == ""{
+	if strings.TrimSpace(req.Email) == ""{
 		return errors.New("email is required")
 	}
-	if len(req.Passsword) < 8{
-		return error.New("password must be at least 8 character")
+	if len(req.Password) < 8{
+		return errors.New("password must be at least 8 character")
 	}
 	return nil
 }

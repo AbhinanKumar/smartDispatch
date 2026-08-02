@@ -2,7 +2,7 @@ package repository
 
 import (
 	"gorm.io/gorm"
-	"github.com/AbhinanKumar/smartDispatch/internal/"
+	"github.com/AbhinanKumar/smart-dispatch/internal/model"
 )
 
 type GormUserRepository struct{
