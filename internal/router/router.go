@@ -7,5 +7,7 @@ func SetupRouter(authHandler *handler.AuthHandler) *gin.Engine{
 	r := gin.Default()
 	r.GET("/health", handler.Health)
 	r.POST("/register", authHandler.Register)
+
+	r.POST("/login", authHandler.Login)
 	return r
 }
