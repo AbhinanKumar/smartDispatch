@@ -151,3 +151,29 @@ Repository speaks: model.User
 They never talk directly.
 
 
+# Why do we use c.Set("userID", userID)?
+{
+    "user_id": 10,
+    "email": "abhi@gmail.com",
+    "exp": 1785678901
+}
+Middleware -> c.Set("userID", 10) -> Handler -> c.Get("userID") -> Service
+After the JWT is validated, we already know the authenticated user's identity. We store it in the request's gin.Context so downstream handlers and services can access it without reparsing the token or making another database query. The context is request-scoped and exists only for the lifetime of that HTTP request.
+
+# c.Abort()?
+Stop processing this request. Do not execute any remaining middleware or handlers.
+
+r.GET("/profile", middleware.AuthMiddleware(), handler.GetProfile,)
+
+Request -> AuthMiddleware -> Handler
+
+# ValidateJWT
+Receive Token-> Parse JWT -> Verify Signature -> Verify Signing Method (HS256) -> Verify Expiration -> Extract Claims -> Return Claims
+
+# token.Claims.(jwt.MapClaims)
+Claims is an interface. An interface can hold many concrete types.
+
+Calims Claims - > jwt.MapClaims or MyCustomClaims or AnotherClaims
+
+To make it know it's specifically a jwt.MapClaims.
+

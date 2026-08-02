@@ -82,6 +82,10 @@ func validateRegisterRequest(req dto.RegisterRequest) error{
 }
 
 func (s *authService) Login(req dto.LoginRequest) (*dto.LoginResponse, error){
+	if err := validateLoginRequest(req); err != nil {
+		return nil, err
+	}
+
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 
 	user, err := s.userRepo.FindByemail(email); 
@@ -105,4 +109,15 @@ func (s *authService) Login(req dto.LoginRequest) (*dto.LoginResponse, error){
 	return &dto.LoginResponse{
 		Token: token,
 	}, nil
+}
+
+func validateLoginRequest(req dto.LoginRequest) error{
+	if strings.TrimSpace(req.Email) == ""{
+		return errors.New("email is required")
+	}
+	if strings.TrimSpace(req.Password) == ""{
+		return errors.New("password is required")
+	}
+
+	return nil
 }
