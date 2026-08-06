@@ -177,3 +177,58 @@ Calims Claims - > jwt.MapClaims or MyCustomClaims or AnotherClaims
 
 To make it know it's specifically a jwt.MapClaims.
 
+# request model should contain customerId or customer-Name, phoneNo.
+
+Database Normalization
+Specifically: Avoid redundancy, Maintain consistency, Single source of truth
+
+
+# Customer + Request
+(Customer Model, Request Model, Create Customer API, Create Request API, Get Request API)
+
+Model -> Migration -> DTO -> Repository -> Service -> Handler -> Route -> Postman Test -> DONE
+
+# Reservation
+(Appointment Window, Reserve Window, Prevent Double Booking, Transactions)
+
+# Dispatch
+(Technician, Scheduler, Assignment, Concurrency)
+
+# Historical record → Snapshot fields
+
+# Request should contain ReservationID
+1. Reservation model can contain appointment information (Separation of Responsibility)
+
+Request -> What customer wants.
+Reservation -> What appointment was booked.
+AppointmentWindow -> What slots are available.
+
+2. It helps while checking logs (Auditing)
+
+3. (Future Changes)
+
+Customer reschedules three times. Now Reservation table becomes:
+| ReservationID | RequestID | Window | Status    |
+| ------------- | --------- | ------ | --------- |
+| 1             | 100       | 9-10   | Cancelled |
+| 2             | 100       | 10-11  | Cancelled |
+| 3             | 100       | 2-3    | Reserved  |
+
+Everything belongs to the same request. (one-to-many relationship)
+Request remains stable. Reservations become historical records.
+
+
+POST   /customers
+GET    /customers
+GET    /customers/:id
+PUT    /customers/:id
+
+POST   /requests
+GET    /requests
+GET    /requests/:id
+PUT    /requests/:id
+
+No Reservation API yet. Because a request should exist before someone books an appointment.
+
+Customer -> Create Request -> Reserve Appointment -> Dispatch -> Complete
+
