@@ -5,6 +5,8 @@ import(
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"github.com/AbhinanKumar/smart-dispatch/internal/dto"
+	"errors"
+	appErrors "github.com/AbhinanKumar/smart-dispatch/internal/errors"
 )
 
 type AuthHandler struct{
@@ -28,9 +30,16 @@ func (h *AuthHandler) Register(c *gin.Context){
 
 	res, err := h.authService.Register(req)
 	if err != nil{
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, appErrors.ErrEmailAlreadyExists):
+			c.JSON(http.StatusConflict, gin.H{
+				"error": err.Error(),
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "internal server error",
+			})
+		}
 		return
 	}
 
@@ -47,9 +56,16 @@ func (h *AuthHandler) Login(c *gin.Context){
 	}
 	res, err := h.authService.Login(req)
 	if err != nil{
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, appErrors.ErrInvalidCredentials):
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": err.Error(),
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "internal server error",
+			})
+		}
 		return
 	}
 	c.JSON(http.StatusOK, res)
