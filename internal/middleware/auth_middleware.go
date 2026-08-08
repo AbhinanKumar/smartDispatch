@@ -1,17 +1,17 @@
 package midddleware
 
-import(
-	"net/http"
-	"strings"
+import (
+	"github.com/AbhinanKumar/smart-dispatch/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/AbhinanKumar/smart-dispatch/internal/config"
+	"net/http"
+	"strings"
 )
 
-func  AuthMiddleware() gin.HandlerFunc{
-	return func(c *gin.Context){
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == ""{
+		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "authorization header missing",
 			})
@@ -20,7 +20,7 @@ func  AuthMiddleware() gin.HandlerFunc{
 		}
 
 		// Extract token
-		if !strings.HasPrefix(authHeader, "Bearer "){
+		if !strings.HasPrefix(authHeader, "Bearer ") {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "invalid token format",
 			})
@@ -32,7 +32,7 @@ func  AuthMiddleware() gin.HandlerFunc{
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := config.ValidateJWT(tokenString)
 
-		if err != nil || !token.Valid{
+		if err != nil || !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "invalid token",
 			})
@@ -42,7 +42,7 @@ func  AuthMiddleware() gin.HandlerFunc{
 
 		claims := token.Claims.(jwt.MapClaims)
 
-		//store UserID 
+		//store UserID
 		c.Set("userID", claims["user_id"])
 		c.Set("email", claims["email"])
 		c.Next()

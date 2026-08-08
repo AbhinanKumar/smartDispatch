@@ -232,3 +232,45 @@ No Reservation API yet. Because a request should exist before someone books an a
 
 Customer -> Create Request -> Reserve Appointment -> Dispatch -> Complete
 
+Customer-Request
+
+# Repository
+Customer -> Create(), GetByID(), GetAll(), Update()
+Request -> Create(), GetByID(), GetAll(), Update()
+
+
+# Service 
+Customer
+CreateCustomer(), GetCustomer(), GetCustomers(), UpdateCustomer()
+
+Request
+CreateRequest(), GetRequest(), GetRequests(), UpdateRequest()
+
+# Handler
+POST -> Bind DTO -> Call Service -> Return JSON
+
+# gorm:"size:100"
+Tells GORM how to create the database schema. 
+(i) Database column size (VARCHAR(100))
+(ii) Prevents storing unnecessarily large strings.
+
+# Why []Customer instead of []*Customer?
+
+When we query:-  var customers []model.Customer;  db.Find(&customers)
+GORM fills the slice. Returning -> []model.Customer   (is simple and efficient.)
+
+Use []*Customer only when:
+Objects are very large
+You want multiple references to the same object
+You need to mutate the same object from multiple places
+
+For our CRUD APIs, []Customer -> is the idiomatic Go choice.
+
+
+Rule 1: Every exported function needs a constructor.
+Rule 2: Repository never returns DTO
+Rule 3: Handler never talks to DB
+Rule 4: Service never returns model
+Rule 5: Validate -> Normalize -> Repository -> Business logic -> DTO -> Return
+
+1. What does client send? -> 2. DTO -> 3. What business rules apply? -> 4. Service -> 5. What does DB need? -> 6. Model + Repository -> 7. What should client receive? -> 8. Response DTO
