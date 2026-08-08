@@ -8,7 +8,6 @@ import(
 	"errors"
 	appErrors "github.com/AbhinanKumar/smart-dispatch/internal/errors"
 )
-
 type AuthHandler struct{
 	authService service.AuthService
 }

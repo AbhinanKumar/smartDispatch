@@ -23,7 +23,12 @@ func main(){
 
 	authHandler := handler.NewAuthHandler(authService)
 
-	r := router.SetupRouter(authHandler)
+	customerRepo := repository.NewCustomerRepository(db)
+	customerService := service.NewCustomerService(customerRepo)
+	customerHandler := handler.NewCustomerHandler(customerService)
+
+
+	r := router.SetupRouter(authHandler, customerHandler,)
 	log.Println("Server running on :8000")
 	r.Run(":8000")
 }
